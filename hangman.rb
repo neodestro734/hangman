@@ -26,11 +26,11 @@ class Hangman
 			break if cur_word.each_char.none? { |char| char == '_' }
 			guesses_left -= 1 if correct_indices.empty?
 
-			@guesser.handle_guess_response(new_guess, cur_word)
+			@guesser.handle_guess_response(new_guess, correct_indices)
 		end
 
 		if guesses_left > 0
-			puts "\n#{@guesser.name} guessed it right!!"
+			puts "\n#{@guesser.name} guessed it right with #{guesses_left} guesses left!!"
 		else
 			puts "\n#{@guesser.name} did not get it :/"
 		end
@@ -83,8 +83,9 @@ class HumanPlayer
 		gets.chomp.split(',').map(&:to_i)
 	end
 
+	#DONE
 	def handle_guess_response(new_guess, cur_word)
-		#UPDATE
+		#nothing needed here
 	end
 end
 
@@ -110,9 +111,27 @@ class ComputerPlayer
 		@dictionary = @dictionary.select { |word| word.length == secret_length }
 	end
 
-	#DONE, UPDATE FOR AI LATER
+	#DONE
 	def guess
-		comp_guess = ('a'..'z').to_a.sample
+		
+		#create a frequency hash of all guessable letters
+		freq_hash = Hash.new { |h, k| h[k] = 0 }
+		@dictionary.each do |dic_word|
+			dic_word.each_char do |d_char|
+				freq_hash[d_char] += 1 unless @letters_guessed.include?(d_char)
+			end
+		end
+
+		cur_max = 0
+		cur_max_let = ''
+		freq_hash.each do |k, v|
+			if v > cur_max
+				cur_max_let = k
+				cur_max = v
+			end
+		end
+
+		comp_guess = cur_max_let
 		puts "Computer guesses: #{comp_guess}"
 		comp_guess
 	end
@@ -126,14 +145,32 @@ class ComputerPlayer
 		correct_indices
 	end
 
-	def handle_guess_response(new_guess, cur_word)
-		#UPDATE
+	#DONE
+	def handle_guess_response(my_last_guess, correct_indices)
+		@letters_guessed << my_last_guess
+
+		@dictionary = @dictionary.select do |dic_word|
+			keep = true
+			dic_word.each_char.with_index do |d_char, i|
+				# where letter guessed is at the wrong index
+				if (d_char == my_last_guess && !correct_indices.include?(i))
+					keep = false
+					break
+				end
+				# where correct index value is different from my_last_guesss
+				if (correct_indices.include?(i) && d_char != my_last_guess)
+					keep = false
+					break
+				end
+			end
+			keep
+		end
 	end
 end
 
-comp = ComputerPlayer.new('dictionary.txt')
-human = HumanPlayer.new('Phil')
+# comp = ComputerPlayer.new('dictionary.txt')
+# human = HumanPlayer.new('Phil')
+# comp2 = ComputerPlayer.new('dictionary.txt')
 # hangman = Hangman.new(human, comp)
-hangman = Hangman.new(comp, human)
-# p 'run now'
-hangman.run
+# hangman = Hangman.new(comp, comp2)
+# hangman.run
