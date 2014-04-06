@@ -30,9 +30,9 @@ class Hangman
 		end
 
 		if guesses_left > 0
-			puts "\n#{@guesser.name} guessed it right with #{guesses_left} guesses left!!"
+			puts "\n#{@guesser.name} guessed \"#{cur_word}\" with #{guesses_left} guesses left!!"
 		else
-			puts "\n#{@guesser.name} did not get it :/"
+			puts "\n#{@guesser.name} could not guess it :/"
 		end
 	end
 end
@@ -173,4 +173,5 @@ end
 # comp2 = ComputerPlayer.new('dictionary.txt')
 # hangman = Hangman.new(human, comp)
 # hangman = Hangman.new(comp, comp2)
+# hangman = Hangman.new(comp, human)
 # hangman.run
