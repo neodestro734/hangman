@@ -20,7 +20,7 @@ class Hangman
 			puts "You have #{guesses_left} guesses left."
 
 			new_guess = @guesser.guess.downcase
-			correct_indices = @knower.check_guess(new_guess)
+			correct_indices = @knower.check_guess(new_guess, secret_length)
 			correct_indices.each { |i| cur_word[i] = new_guess }
 
 			break if cur_word.each_char.none? { |char| char == '_' }
@@ -49,10 +49,13 @@ class HumanPlayer
 	#DONE
 	def pick_secret_word
 		begin
-			puts "Please pick a secret word. How long is it?"
+			puts "\nPlease pick a secret word. How long is it?"
 			secret_length = Integer(gets.chomp)
+			if secret_length > 20
+				raise ArgumentError.new#("Word is #{secret_length} characters.")
+			end
 		rescue
-			puts "Not a valid length."
+			print "\nNot a valid length."
 			retry
 		end
 		secret_length
@@ -66,21 +69,39 @@ class HumanPlayer
 	#DONE
 	def guess
 		guess = ''
-		loop do
+		begin
 			puts "Please guess a letter:"
 			guess = gets.chomp
-			break if guess.length == 1
-			puts "\nNot a valid guess."
+			if guess.nil? || guess.length > 1
+				raise ArgumentError.new("\nNot a valid guess.")
+			end
+			begin
+				Integer(guess)
+				raise ArgumentError.new("\nCannot use integers")
+			end
+		rescue ArgumentError => e
+			puts e.message
+			retry
 		end
 		guess
 	end
 
 	#DONE
-	def check_guess(new_guess)
-		puts "\nPlease select the indices, separated by commas, that the computer "
-		puts "chose correctly (enter for no indices:"
-		#XXX come back to error check user input
-		gets.chomp.split(',').map(&:to_i)
+	def check_guess(new_guess, secret_length)
+		begin
+			puts "\nPlease select the indices, separated by commas, that the computer "
+			puts "chose correctly (enter for no indices:"
+
+			correct_indices = gets.chomp.split(',').map(&:to_i)
+
+			if correct_indices.any? { |i| i > secret_length - 1 }
+				raise ArgumentError.new("\nIndex is out of range")
+			end
+		rescue => e
+			puts e.message
+			retry
+		end
+		correct_indices
 	end
 
 	#DONE
@@ -137,7 +158,7 @@ class ComputerPlayer
 	end
 
 	#DONE
-	def check_guess(new_guess)
+	def check_guess(new_guess, secret_length)
 		correct_indices = []
 		@secret_word.each_char.with_index do |char, i|
 			correct_indices << i if (char == new_guess)
@@ -168,10 +189,12 @@ class ComputerPlayer
 	end
 end
 
-# comp = ComputerPlayer.new('dictionary.txt')
-# human = HumanPlayer.new('Phil')
-# comp2 = ComputerPlayer.new('dictionary.txt')
-# hangman = Hangman.new(human, comp)
-# hangman = Hangman.new(comp, comp2)
-# hangman = Hangman.new(comp, human)
-# hangman.run
+if __FILE__ == $PROGRAM_NAME
+	# comp = ComputerPlayer.new('dictionary.txt')
+	# human = HumanPlayer.new('Phil')
+	# comp2 = ComputerPlayer.new('dictionary.txt')
+	# hangman = Hangman.new(human, comp)
+	# hangman = Hangman.new(comp, comp2)
+	# hangman = Hangman.new(comp, human)
+	# hangman.run
+end
